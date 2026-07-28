@@ -9,24 +9,31 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] private float walkSpeed = 1f;
     [SerializeField] private float runSpeed = 5f;
     [SerializeField] private float rotationSpeed = 50f;
+    [SerializeField] private float jumpForce = 50f;
+
+    private Rigidbody rb;
+    private bool isGrounded = true;
 
     private Animator animator;
 
     void Awake()
     {
         animator = GetComponentInChildren<Animator>();
+        rb = GetComponent<Rigidbody>();
     }
 
     void OnEnable()
     {
         movement.Enable();
         run.Enable();
+        jump.Enable();
     }
 
     void OnDisable()
     {
         movement.Disable();
         run.Disable();
+        jump.Disable();
     }
 
     void Update()
@@ -66,5 +73,20 @@ public class PlayerMove : MonoBehaviour
 
         animator.SetBool("isWalking", isWalking);
         animator.SetBool("isRunning", isRunning);
+        if (jump.WasPressedThisFrame() && isGrounded)
+        {
+            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+
+            isGrounded = false;
+            animator.SetBool("isJumping", true);
+        }
+    }
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = true;
+            animator.SetBool("isJumping", false);
+        }
     }
 }
