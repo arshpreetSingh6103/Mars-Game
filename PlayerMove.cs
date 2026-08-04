@@ -10,6 +10,7 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] private float runSpeed = 5f;
     [SerializeField] private float rotationSpeed = 50f;
     [SerializeField] private float jumpForce = 50f;
+    [SerializeField] private PlayerStats stats;
 
     private Rigidbody rb;
     private bool isGrounded = true;
@@ -41,7 +42,14 @@ public class PlayerMove : MonoBehaviour
         Vector2 input = movement.ReadValue<Vector2>();
 
         bool isWalking = input.magnitude > 0.1f;
-        bool isRunning = isWalking && run.IsPressed();
+
+        // Only run if there is stamina left
+        bool isRunning = isWalking && run.IsPressed() && stats.CanSprint();
+
+        if (isRunning)
+        {
+            stats.DrainSprint();
+        }
 
         float currentSpeed = isRunning ? runSpeed : walkSpeed;
 
@@ -68,13 +76,17 @@ public class PlayerMove : MonoBehaviour
                 rotationSpeed * Time.deltaTime
             );
 
-            transform.position += moveDirection.normalized * currentSpeed * Time.deltaTime;
+            rb.MovePosition(
+                rb.position + moveDirection.normalized * currentSpeed * Time.deltaTime
+            );
         }
 
         animator.SetBool("isWalking", isWalking);
         animator.SetBool("isRunning", isRunning);
-        if (jump.WasPressedThisFrame() && isGrounded)
+        if (jump.WasPressedThisFrame() && isGrounded && stats.CanJump())
         {
+            stats.UseJump();
+
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
 
             isGrounded = false;
@@ -83,10 +95,7 @@ public class PlayerMove : MonoBehaviour
     }
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            isGrounded = true;
-            animator.SetBool("isJumping", false);
-        }
+        isGrounded = true;
+        animator.SetBool("isJumping", false);
     }
 }
