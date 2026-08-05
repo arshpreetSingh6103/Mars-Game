@@ -27,7 +27,7 @@ public class ButtonScale : MonoBehaviour,
         transform.localScale = Vector3.Lerp(
             transform.localScale,
             targetScale,
-            scaleSpeed * Time.deltaTime
+            scaleSpeed * Time.unscaledDeltaTime
         );
     }
 
