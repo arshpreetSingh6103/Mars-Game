@@ -1,16 +1,22 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class ButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class ButtonScale : MonoBehaviour,
+    IPointerEnterHandler,
+    IPointerExitHandler,
+    ISelectHandler,
+    IDeselectHandler
 {
+    public float selectedScale = 1.15f;
+    public float scaleSpeed = 10f;
+
     private Vector3 originalScale;
-
-    [SerializeField] private float hoverScale = 1.4f;
-    [SerializeField] private float speed = 8f;
-
     private Vector3 targetScale;
 
-    void Start()
+    private bool isHovered = false;
+    private bool isSelected = false;
+
+    void Awake()
     {
         originalScale = transform.localScale;
         targetScale = originalScale;
@@ -21,17 +27,39 @@ public class ButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
         transform.localScale = Vector3.Lerp(
             transform.localScale,
             targetScale,
-            Time.deltaTime * speed
+            scaleSpeed * Time.deltaTime
         );
+    }
+
+    void UpdateTargetScale()
+    {
+        if (isHovered || isSelected)
+            targetScale = originalScale * selectedScale;
+        else
+            targetScale = originalScale;
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        targetScale = originalScale * hoverScale;
+        isHovered = true;
+        UpdateTargetScale();
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        targetScale = originalScale;
+        isHovered = false;
+        UpdateTargetScale();
+    }
+
+    public void OnSelect(BaseEventData eventData)
+    {
+        isSelected = true;
+        UpdateTargetScale();
+    }
+
+    public void OnDeselect(BaseEventData eventData)
+    {
+        isSelected = false;
+        UpdateTargetScale();
     }
 }
